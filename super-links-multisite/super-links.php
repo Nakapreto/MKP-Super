@@ -17,7 +17,7 @@ if(!defined('ABSPATH')) { die('You are not authorized to access this'); }
 
 define('SUPER_LINKS_TCF','e782e77a5b577f4f4f6091e01821dadd');
 define('SUPER_LINKS_PLUGIN_SLUG','superLinks');
-define('SUPER_LINKS_PLUGIN_NAME','super-links');
+define('SUPER_LINKS_PLUGIN_NAME','super-links-multisite');
 define('SUPER_LINKS_PATH',WP_PLUGIN_DIR.'/'.SUPER_LINKS_PLUGIN_NAME);
 define('SUPER_LINKS_CONTROLLERS_PATH',SUPER_LINKS_PATH.'/application/controllers');
 define('SUPER_LINKS_MODELS_PATH',SUPER_LINKS_PATH.'/application/models');
@@ -192,4 +192,3 @@ function diferenceUrlSuperLinks($currentUrl = ''){
 // Carrega o controller principal
 require_once(SUPER_LINKS_CONTROLLERS_PATH."/CoreController.php");
 $coreController = new CoreController("SuperLinksModel");
-require_once(SUPER_LINKS_CONTROLLERS_PATH."/CoreController.php");
