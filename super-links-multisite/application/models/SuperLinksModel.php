@@ -418,6 +418,8 @@ class SuperLinksModel extends SuperLinksCoreModel {
 
     private function createTableSplLinks($char_collation)
     {
+        global $wpdb;
+        
         $sql = "CREATE TABLE {$this->tables['spl_link']} (
               id int(11) NOT NULL auto_increment,
               idGroup int(11) DEFAULT NULL,
@@ -431,7 +433,6 @@ class SuperLinksModel extends SuperLinksCoreModel {
               createdAt datetime NOT NULL,
               updatedAt datetime DEFAULT NULL,
               PRIMARY KEY  (id),
-              FOREIGN KEY (idGroup) REFERENCES " . $this->tables['spl_group'] . "(id),
               KEY statusLink (statusLink),
               KEY redirectType (redirectType(191)),
               KEY createdAt (createdAt),
@@ -439,10 +440,18 @@ class SuperLinksModel extends SuperLinksCoreModel {
             ) {$char_collation};";
 
         dbDelta($sql);
+        
+        // Adiciona FOREIGN KEY separadamente se não existir
+        $foreign_key_exists = $wpdb->get_var("SELECT COUNT(*) FROM INFORMATION_SCHEMA.KEY_COLUMN_USAGE WHERE TABLE_NAME = '{$this->tables['spl_link']}' AND COLUMN_NAME = 'idGroup' AND REFERENCED_TABLE_NAME IS NOT NULL");
+        if (!$foreign_key_exists) {
+            $wpdb->query("ALTER TABLE {$this->tables['spl_link']} ADD CONSTRAINT fk_link_group FOREIGN KEY (idGroup) REFERENCES {$this->tables['spl_group']}(id)");
+        }
     }
 
     private function createTableSplAffiliateLinks($char_collation)
     {
+        global $wpdb;
+        
         $sql = "CREATE TABLE {$this->tables['spl_affiliateLink']} (
               id int(11) NOT NULL auto_increment,
               idLink int(11) NOT NULL,
@@ -450,25 +459,37 @@ class SuperLinksModel extends SuperLinksCoreModel {
               createdAt datetime NOT NULL,
               updatedAt datetime default NULL,
               PRIMARY KEY (id),
-              FOREIGN KEY (idLink) REFERENCES " . $this->tables['spl_link'] . "(id) on update cascade on delete cascade,
               KEY createdAt (createdAt),
               KEY updatedAt (updatedAt)
             ) {$char_collation};";
 
         dbDelta($sql);
+        
+        // Adiciona FOREIGN KEY separadamente se não existir
+        $foreign_key_exists = $wpdb->get_var("SELECT COUNT(*) FROM INFORMATION_SCHEMA.KEY_COLUMN_USAGE WHERE TABLE_NAME = '{$this->tables['spl_affiliateLink']}' AND COLUMN_NAME = 'idLink' AND REFERENCED_TABLE_NAME IS NOT NULL");
+        if (!$foreign_key_exists) {
+            $wpdb->query("ALTER TABLE {$this->tables['spl_affiliateLink']} ADD CONSTRAINT fk_affiliate_link FOREIGN KEY (idLink) REFERENCES {$this->tables['spl_link']}(id) ON UPDATE CASCADE ON DELETE CASCADE");
+        }
     }
 
     private function createTableSplLinkMetrics($char_collation) {
+        global $wpdb;
+        
         $sql = "CREATE TABLE {$this->tables['spl_linkMetrics']} (
               id int(11) NOT NULL auto_increment,
               idAffiliateLink int(11) NOT NULL,
               accessTotal int(11) NOT NULL DEFAULT 0,
               uniqueTotalAccesses int(11) NOT NULL DEFAULT 0,
-              PRIMARY KEY  (id),
-              FOREIGN KEY (idAffiliateLink) REFERENCES " . $this->tables['spl_affiliateLink'] . "(id) on update cascade on delete cascade
+              PRIMARY KEY  (id)
             ) {$char_collation};";
 
         dbDelta($sql);
+        
+        // Adiciona FOREIGN KEY separadamente se não existir
+        $foreign_key_exists = $wpdb->get_var("SELECT COUNT(*) FROM INFORMATION_SCHEMA.KEY_COLUMN_USAGE WHERE TABLE_NAME = '{$this->tables['spl_linkMetrics']}' AND COLUMN_NAME = 'idAffiliateLink' AND REFERENCED_TABLE_NAME IS NOT NULL");
+        if (!$foreign_key_exists) {
+            $wpdb->query("ALTER TABLE {$this->tables['spl_linkMetrics']} ADD CONSTRAINT fk_metrics_affiliate FOREIGN KEY (idAffiliateLink) REFERENCES {$this->tables['spl_affiliateLink']}(id) ON UPDATE CASCADE ON DELETE CASCADE");
+        }
     }
 
     private function createTableSplLinkMonitoring($char_collation) {
@@ -560,17 +581,23 @@ class SuperLinksModel extends SuperLinksCoreModel {
     private function updateTablesV101(){
         global $wpdb;
 
-        //Inclui campo para funcionalidade de redirect no botão voltar
-        $sql = "ALTER TABLE {$this->tables['spl_link']} add redirectBtn varchar(255) DEFAULT '' ";
-        $wpdb->query($sql);
+        //Inclui campo para funcionalidade de redirect no botão voltar - apenas se não existir
+        $column_exists = $wpdb->get_results($wpdb->prepare("SHOW COLUMNS FROM {$this->tables['spl_link']} LIKE %s", 'redirectBtn'));
+        if (!$column_exists) {
+            $sql = "ALTER TABLE {$this->tables['spl_link']} add redirectBtn varchar(255) DEFAULT '' ";
+            $wpdb->query($sql);
+        }
     }
 
     private function updateTablesV104(){
         global $wpdb;
 
-        //Inclui campo para funcionalidade de redirect no botão voltar
-        $sql = "ALTER TABLE {$this->tables['spl_link']} add enableRedirectJavascript varchar(64) DEFAULT 'disabled'";
-        $wpdb->query($sql);
+        //Inclui campo para funcionalidade de redirect no botão voltar - apenas se não existir
+        $column_exists = $wpdb->get_results($wpdb->prepare("SHOW COLUMNS FROM {$this->tables['spl_link']} LIKE %s", 'enableRedirectJavascript'));
+        if (!$column_exists) {
+            $sql = "ALTER TABLE {$this->tables['spl_link']} add enableRedirectJavascript varchar(64) DEFAULT 'disabled'";
+            $wpdb->query($sql);
+        }
     }
 
     private function updateTablesV105(){
@@ -696,7 +723,8 @@ class SuperLinksModel extends SuperLinksCoreModel {
         $sql = "ALTER TABLE {$this->tables['spl_cookieLinks']} add idGroup int(11) DEFAULT NULL";
         $wpdb->query($sql);
 
-        $sql = "ALTER TABLE {$this->tables['spl_cookieLinks']} ADD FOREIGN KEY (idGroup) REFERENCES ".$this->tables['spl_cookieGroup']."(id)";
+        // Adiciona FOREIGN KEY com nome de constraint
+        $sql = "ALTER TABLE {$this->tables['spl_cookieLinks']} ADD CONSTRAINT fk_cookie_group FOREIGN KEY (idGroup) REFERENCES ".$this->tables['spl_cookieGroup']."(id)";
         $wpdb->query($sql);
     }
 
@@ -746,6 +774,8 @@ class SuperLinksModel extends SuperLinksCoreModel {
     }
 
     private function createTableSplImport($char_collation) {
+        global $wpdb;
+        
         $sql = "CREATE TABLE {$this->tables['spl_importLinks']} (
               id int(11) NOT NULL auto_increment,
               idLink int(11) NOT NULL,
@@ -753,7 +783,6 @@ class SuperLinksModel extends SuperLinksCoreModel {
               idLinkInPlugin varchar(255) NOT NULL,
               createdAt datetime NOT NULL,
               PRIMARY KEY  (id),
-              FOREIGN KEY (idLink) REFERENCES " . $this->tables['spl_link'] . "(id) on update cascade on delete cascade,
               KEY idLink (idLink),
               KEY pluginToImport (pluginToImport),
               KEY idLinkInPlugin (idLinkInPlugin),
@@ -761,6 +790,12 @@ class SuperLinksModel extends SuperLinksCoreModel {
             ) {$char_collation};";
 
         dbDelta($sql);
+        
+        // Adiciona FOREIGN KEY separadamente se não existir
+        $foreign_key_exists = $wpdb->get_var("SELECT COUNT(*) FROM INFORMATION_SCHEMA.KEY_COLUMN_USAGE WHERE TABLE_NAME = '{$this->tables['spl_importLinks']}' AND COLUMN_NAME = 'idLink' AND REFERENCED_TABLE_NAME IS NOT NULL");
+        if (!$foreign_key_exists) {
+            $wpdb->query("ALTER TABLE {$this->tables['spl_importLinks']} ADD CONSTRAINT fk_import_link FOREIGN KEY (idLink) REFERENCES {$this->tables['spl_link']}(id) ON UPDATE CASCADE ON DELETE CASCADE");
+        }
     }
 
     private function updateTablesV1015(){
