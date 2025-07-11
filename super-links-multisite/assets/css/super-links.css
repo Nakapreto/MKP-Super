@@ -1,0 +1,272 @@
+/**
+ * Super Links
+ *
+ * Copyright 2020 Thiago Tedeschi
+ *
+ * Released on: Jul/2020
+ */
+
+.no-margin {
+    margin:0px;
+}
+
+.no-padding {
+    padding: 0px;
+}
+
+.btn-filter {
+    cursor: pointer;
+}
+
+.is-link {
+    cursor: pointer;
+}
+
+.box-link {
+    background-color:#f5f5f5;
+    padding: 20px 0;
+    border-radius: 5px;
+}
+
+.box-title {
+    font-size: 40px;
+    font-weight: normal;
+    margin-top: 10px;
+    margin-bottom: 0;
+    text-align: center;
+    color: #4ad1e5;
+}
+
+.box-text {
+    font-size: 13px;
+    font-weight: normal;
+    margin-top: 10px;
+    margin-bottom: 0;
+    text-align: center;
+}
+
+.box-titlelink {
+    font-size: 24px;
+    font-weight: normal;
+    margin-top: 10px;
+    margin-bottom: 0;
+    text-align: center;
+}
+
+.fa-2x {
+    margin: 0 auto;
+    float: none;
+    display: table;
+    color: #4ad1e5;
+}
+
+.super-links-header {
+    margin-left: -20px;
+    padding: 15px;
+    padding-left: 22px;
+    background-color: #f7f7f7;
+    background-size: 1200px 75px;
+    min-height: 36px;
+}
+
+.super-links-header img.super-links-logo{
+    width: 180px;
+}
+
+.spl-actions-view {
+    color: #bf8e07!important;
+}
+
+.spl-actions-view:hover {
+    color: #ffffff!important;
+}
+
+.spl-actions-edit {
+    color: #0058b0!important;
+}
+
+.spl-actions-edit:hover {
+    color: #ffffff!important;
+}
+
+.spl-actions-delete {
+    color: #992937 !important;
+}
+
+.spl-actions-delete:hover {
+    color: #ffffff !important;
+}
+
+
+#automaticLinkskeywords {
+    padding: 10px;
+}
+#automaticLinkskeywords input {
+    border: 0;
+    outline: 0;
+    box-shadow: none;
+    background: none;
+    margin: 0;
+    margin-top: -2px;
+    font-size: 14px;
+    font-weight: bold;
+    cursor: text;
+}
+#automaticLinkskeywords .taggle_placeholder {
+    color: #666;
+    top: 5px;
+    left: 0;
+    cursor: text;
+    padding: 10px;
+}
+#automaticLinkskeywords .taggle_sizer {
+    display: none;
+}
+
+.taggle_list {
+    display: inline-block;
+    vertical-align: middle;
+    /*line -altura: 2, 5;*/
+    largura: 100%;
+    margem: 0
+}
+
+.taggle_list li {
+    display: inline;
+    vertical-align: bottom;
+    white-space: nowrap;
+    font-weight: 500;
+    margin-bottom: 5px
+}
+
+.taggle_list .taggle {
+    margin-right: 8px;
+    margin-bottom: 8px;
+    background: #e2e1df;
+    padding: 5px 10px;
+    border-radius: 3px;
+    position: relative;
+    cursor: pointer;
+    -webkit-transit: all .3s;
+    transição: all .3s;
+    -webkit-animation-duration: 1s;
+    animation-duration: 1s;
+    -webkit-animation-fill-mode: both;
+    animation-fill-mode: both
+}
+
+.taggle_list .taggle_hot {
+    background: #cac8c4
+}
+
+.taggle_list .taggle .close {
+    font-size: 1.1rem;
+    position: absolute;
+    top: 5px;
+    right: 3px;
+    text-decoration: none;
+    padding-left: 2px;
+    padding-top: 2px;
+    line-height: 1;
+    color: #ccc;
+    color: rgba(0, 0, 0, .2);
+    padding-bottom: 4px;
+    display: inline-block;
+    opacity: 0;
+    pointer-events: none;
+    border: 0;
+    background: none;
+    cursor: pointer
+}
+
+.taggle_list .taggle:hover {
+    padding: 5px 15px 5px 5px;
+    background: #ccc;
+    -webkit-transition: all .3s;
+    transition: all .3s
+}
+
+.taggle_list .taggle:hover > .close {
+    display: inline-block;
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.taggle_list .taggle .close:hover {
+    color: #000000;
+}
+
+.taggle_placeholder {
+    position: absolute;
+    color: #ccc;
+    top: 12px;
+    left: 8px;
+    -webkit-transaction: opacity, .25s;
+    transaction: opacity, .25s;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none
+}
+
+.taggle_input {
+    padding: 8px 8px 8px 0;
+    margin-top: -5px;
+    background: none;
+    max-width: 100%
+}
+
+.textarea.input, textarea.input {
+    border: 0;
+    background: #fdfdfd;
+    -webkit-box-shadow: inset 0 1px 2px rgba(0, 0, 0, .2), 0 1px 1px hsla(0, 0%, 100%, .7);
+    box-shadow: inset 0 1px 2px rgba(0, 0, 0, .2), 0 1px 1px hsla(0, 0%, 100%, .7);
+    min-height: 60px;
+    padding: 8px;
+    border-radius: 3px;
+    color: #555;
+    -webkit-transition: all .25s;
+    transition: all .25s;
+    cursor: text;
+    margin-bottom: 10px;
+    position: relative;
+}
+
+.textarea.input.active, .textarea.input:focus, textarea.input.active, textarea.input:focus {
+    background: #fff;
+    -webkit-transition: all .25s;
+    transition: all .25s
+}
+
+.textarea.input, textarea.input {
+    height: auto
+}
+
+.textarea.tags {
+    position: relative
+}
+
+.textarea.tags * {
+    -webkit-box-sizing: content-box;
+    box-sizing: content-box
+}
+
+.placeholder_input {
+    position: relative
+}
+
+.placeholder_input span {
+    position: absolute;
+    color: #aaa;
+    top: 50%;
+    margin-top: -11px;
+    left: 10px
+}
+
+.placeholder_input input {
+    width: 120px
+}
+
+.filterLink td:last-child {
+    min-width: 170px;
+}

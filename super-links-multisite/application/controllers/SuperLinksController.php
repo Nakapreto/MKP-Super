@@ -1,0 +1,278 @@
+<?php if (!defined('ABSPATH')) {
+    die('You are not authorized to access this');
+}
+
+class SuperLinksController extends SuperLinksFramework
+{
+    protected $superLinksModel;
+
+    public function __construct($model = null, $hooks = [], $filters = [])
+    {
+        $this->setScenario('super_links_activation');
+
+        $this->setModel($model);
+        $this->loadModel();
+
+        $this->init($hooks, $filters);
+    }
+
+    public function init($hooks = [], $filters = []){
+        $hooks = array_merge($hooks, $this->basicHooks());
+        $filters = array_merge($filters, $this->basicFilters());
+
+        parent::init($hooks, $filters);
+    }
+
+    private function basicHooks()
+    {
+        return [];
+    }
+
+    private function basicFilters()
+    {
+        return [];
+    }
+
+    public function index()
+    {
+        $superLinksModel = new SuperLinksModel();
+        $lic = false;
+
+        if($superLinksModel->isPluginActive()){
+            $lic = $superLinksModel->verif6licspl();
+            $this->pageData['lic'] = $lic;
+            if (isset($_POST['scenario'])) {
+                $superLinksModel->setAttributes($_POST[$superLinksModel->getModelName()]);
+
+                $hp = $superLinksModel->getAttribute('hp_atualizacao');
+                $dadosHp = $superLinksModel->lic6validspl($hp);
+                if(isset($dadosHp['status']) && $dadosHp['status']) {
+                    $toast = '';
+                    $typeToast = 'success';
+                    $timeToExpire = time() + 60;
+                    $urlView = SUPER_LINKS_TEMPLATE_URL . '/wp-admin/admin.php?page=super_links';
+                    if ($hp) {
+                        $hp = trim($hp);
+                        $this->upVitllinks($hp);
+                        $retorno = $superLinksModel->vapsplmodelHp();
+
+                        if ($retorno) {
+                            $toast = isset($retorno['msg']) ? $retorno['msg'] : 'Erro';
+                            $typeToast = 'error';
+                        } else {
+                            $toast = TranslateHelper::getTranslate('O HP foi salvo com sucesso!');
+                        }
+                    } else {
+                        $toast = TranslateHelper::getTranslate('Não foi digitado um HP válido. Por favor tente novamente.');
+                        $typeToast = 'error';
+                    }
+                }else{
+                    $msg = isset($dadosHp['msg'])? $dadosHp['msg'] : 'Houve algum erro. Por favor tente novamente.';
+                    $toast = TranslateHelper::getTranslate($msg);
+                    $typeToast = 'error';
+                }
+
+                echo "<script>
+                          document.cookie = \"toastSPL=$toast; expires=$timeToExpire; path=/\";
+                          document.cookie = \"typeToastSPL=$typeToast; expires=$timeToExpire; path=/\";
+                          document.location = '".$urlView."'
+                      </script>";
+                exit();
+            }
+        }
+
+        $this->render(SUPER_LINKS_VIEWS_PATH . '/admin/index.php');
+    }
+
+    public function activation(){
+        // Método de ativação desabilitado na versão multisite
+        // Plugin sempre ativo
+        wp_redirect(admin_url("admin.php?page=super_links"));
+        exit();
+    }
+    }
+
+//     private function doActivation(){
+        $this->pageData['pageTitle'] = TranslateHelper::getTranslate('Ativação');
+
+        if (isset($_POST['scenario'])) {
+            $superLinksModel = $this->superLinksModel;
+
+            $superLinksModel->setAttributes($_POST[$superLinksModel->getModelName()]);
+
+            if(!$superLinksModel->isValid()){
+                $this->render(SUPER_LINKS_VIEWS_PATH . '/admin/notActivated.php');
+                exit();
+            }
+
+            $license_key = $superLinksModel->getAttribute('license_key');
+			$license_key = trim($license_key);
+
+	        $consultaHp = wp_remote_get('https://wpsuperlinks.top/licenca/buscaLicencaPeloHp.php?token=RESfdh4848fjdKYpYah1591dsa&licenca='.$license_key, array('timeout' => 200, 'sslverify' => false));
+
+			if($consultaHp){
+				if (!is_wp_error($consultaHp)) {
+					$dadosHp = json_decode(wp_remote_retrieve_body($consultaHp));
+					if(isset($dadosHp->success) && $dadosHp->success && isset($dadosHp->license_key) && $dadosHp->license_key) {
+						$license_key = $dadosHp->license_key;
+					}
+				}
+			}
+
+            $url_completa = get_option('siteurl');
+			if(!$url_completa) {
+                $url_completa = $_SERVER['SERVER_NAME'];
+            }
+
+            $paramsActivation = array(
+                'slm_action' => 'slm_activate',
+                'secret_key' => $superLinksModel->getSecretKey(),
+                'license_key' => $license_key,
+                'registered_domain' => $url_completa,
+                'item_reference' => urlencode(SUPER_LINKS_PLUGIN_NAME),
+            );
+
+            // Send query to the license manager server
+            $query = esc_url_raw(add_query_arg($paramsActivation, $superLinksModel->getServerUrl()));
+            $response = wp_remote_get($query, array('timeout' => 200, 'sslverify' => false));
+
+            // Check for error in the response
+            if (is_wp_error($response)){
+                $this->pageData['message'] =  TranslateHelper::getTranslate("Erro! Não conseguimos ativar o plugin. Contate o suporte pelo WhatsApp : 51984320624");
+            }
+
+            // License data.
+            $license_data = json_decode(wp_remote_retrieve_body($response));
+
+            $pesquisaUrl = 'License key already in use on '. $url_completa;
+
+            $result = false;
+            if (strpos($license_data->message, $pesquisaUrl) !== false) {
+                $result = true;
+            }
+
+            if($license_data->result == 'success' || $result){
+
+                $this->pageData['message'] = TranslateHelper::getTranslate('Mensagem: ') . $license_data->message;
+
+                $this->upllinks($license_key);
+
+                $this->render(SUPER_LINKS_VIEWS_PATH . '/admin/activated.php');
+                exit();
+            }
+            else{
+
+                $already_on_domain = $license_data->message;
+
+                if (strpos($already_on_domain, 'License key already in use on') !== false) {
+
+                    $this->upllinks($license_key);
+
+                    $this->render(SUPER_LINKS_VIEWS_PATH . '/admin/activated.php');
+                    die();
+                }
+
+                $this->pageData['message'] = TranslateHelper::getTranslate('Mensagem: ') . $license_data->message;
+
+                $this->render(SUPER_LINKS_VIEWS_PATH . '/admin/notActivated.php');
+            }
+
+        }
+
+        $this->render(SUPER_LINKS_VIEWS_PATH . '/admin/activation.php');
+    }
+
+    private function upllinks($licence = null){
+        if(!is_null($licence)) {
+            update_option('spl_code_top', $licence);
+            wp_cache_delete('alloptions', 'options');
+        }
+    }
+
+    private function upVitllinks($hp = null){
+        if(!is_null($hp)) {
+            update_option('spl_hpvit_top', $hp);
+            wp_cache_delete('alloptions', 'options');
+        }
+    }
+
+//     private function doDeactivation(){
+        $this->pageData['pageTitle'] = TranslateHelper::getTranslate('Desativação');
+        $superLinksModel = $this->superLinksModel;
+        $superLinksModel->setAttribute('license_key', get_option('spl_code_top'));
+
+        if (isset($_POST['scenario'])) {
+
+            $license_key = $superLinksModel->getAttribute('license_key');
+
+            $url_completa = get_option('siteurl');
+            if(!$url_completa) {
+                $url_completa = $_SERVER['SERVER_NAME'];
+            }
+
+            // API query parameters
+            $paramsActivation = array(
+                'slm_action' => 'slm_deactivate',
+                'secret_key' => $superLinksModel->getSecretKey(),
+                'license_key' => $license_key,
+                'registered_domain' => $url_completa,
+                'item_reference' => urlencode(SUPER_LINKS_PLUGIN_NAME),
+            );
+
+            // Send query to the license manager server
+            $query = esc_url_raw(add_query_arg($paramsActivation,  $superLinksModel->getServerUrl()));
+            $response = wp_remote_get($query, array('timeout' => 20, 'sslverify' => false));
+
+            // Check for error in the response
+            if (is_wp_error($response)){
+                $this->pageData['message'] =  TranslateHelper::getTranslate("Erro! Não conseguimos desativar a Licença. Contate o suporte pelo WhatsApp : 51984320624");
+            }
+
+            $license_data = json_decode(wp_remote_retrieve_body($response));
+
+            if($license_data->result == 'success' || $license_data->message == 'The license key on this domain is already inactive'){
+
+                $this->pageData['message'] = TranslateHelper::getTranslate('Mensagem: ') . $license_data->message;
+                $superLinksModel->desativaPlugin();
+
+                $this->render(SUPER_LINKS_VIEWS_PATH . '/admin/deactivated.php');
+                exit();
+            }
+        }
+
+        $this->render(SUPER_LINKS_VIEWS_PATH . '/admin/deactivation.php');
+    }
+
+    public function config()
+    {
+        $this->pageData['pageTitle'] = TranslateHelper::getTranslate('Configuração');
+        if(isset($_POST['enableRedis'])){
+            $enableRedis = ($_POST['enableRedis'] == 'sim')? true : false;
+
+            update_option('enable_redis_superLinks', $enableRedis);
+            wp_cache_delete('alloptions', 'options');
+            $toast = TranslateHelper::getTranslate('A opção foi salva com sucesso!');
+            $timeToExpire = time() + 60;
+
+            echo "<script> document.cookie = \"toastSPL=$toast; expires=$timeToExpire; path=/\"; </script>";
+        }
+
+        if(isset($_POST['facebookVerification'])){
+            $facebookVerification = $_POST['facebookVerification'];
+            $facebookVerification = stripslashes($facebookVerification);
+            $facebookVerification = str_replace('<meta name="facebook-domain-verification" content="', "", $facebookVerification);
+            $facebookVerification = str_replace('" />', "", $facebookVerification);
+
+            $facebookVerification = str_replace("<meta name='facebook-domain-verification' content='", "", $facebookVerification);
+            $facebookVerification = str_replace("' />", "", $facebookVerification);
+            update_option('facebookVerificationSPL', $facebookVerification);
+            wp_cache_delete('alloptions', 'options');
+            $toast = TranslateHelper::getTranslate('A Configuração de Validação de domínio foi salva com sucesso!');
+            $timeToExpire = time() + 60;
+
+            echo "<script> document.cookie = \"toastSPL=$toast; expires=$timeToExpire; path=/\"; </script>";
+        }
+        $this->render(SUPER_LINKS_VIEWS_PATH . '/admin/config.php');
+    }
+
+}

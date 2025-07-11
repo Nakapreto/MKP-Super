@@ -1,0 +1,20 @@
+{
+	"name": "Super Links",
+	"version": "1.0.0",
+	"download_url": "http://wpsuperlinks.top/updates/super-links.zip",
+
+	"homepage": "http://wpsuperlinks.top/",
+	"last_updated": "2020-09-09 10:01:00",
+
+	"author": "Carlos Lourenço, Fábio Vasconcelos, Thiago Tedeschi",
+
+	"sections": {
+		"description": "O Super Links permite que você crie links usando seu próprio nome de domínio que redirecionam para seus links de afiliado de forma camuflada ou não."
+	},
+
+	"rating": 0,
+	"num_ratings": 0,
+
+	"downloaded": 0,
+	"active_installs": 0
+}
