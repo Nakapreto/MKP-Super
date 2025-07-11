@@ -1203,10 +1203,6 @@ class SuperLinksAddLinkController extends SuperLinksFramework
         // Versão multisite sempre ativa
         return true;
     }
-        return true;
-    }
-
-
     // Clone Pages
 
     public function viewClonePages()
