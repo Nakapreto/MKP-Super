@@ -470,10 +470,6 @@ class SuperLinksCookieLinkController extends SuperLinksFramework
         return true;
     }
 
-    private function activateCookie($keywordSuperLinks = ''){
-        $superLinksModel = new SuperLinksModel();
-
-        if(!$superLinksModel->isPluginActive()){
     private function activateCookie($keywordSuperLinks = ""){
         $superLinksModel = new SuperLinksModel();
         
@@ -481,6 +477,8 @@ class SuperLinksCookieLinkController extends SuperLinksFramework
         // if(!$superLinksModel->isPluginActive()){
         //     return false;
         // }
+        
+        $cookiePageModel = new SuperLinksLinkCookiePageModel();
         $dataLinks = $cookiePageModel->getAllDataByParam('enabled','statusCookie');
 
         $currentePageID = get_the_ID();
