@@ -13,14 +13,18 @@ class SCM_Cloner {
      * Clona uma página apenas para o site/subdomínio atual
      * @param string $source_url URL da página a ser clonada
      * @param string $target_slug Slug da nova página
+     * @param string $post_status Status da página ('publish' ou 'draft')
      * @return string Mensagem de sucesso ou erro
      */
-    public static function clone_site($source_url, $target_slug) {
+    public static function clone_site($source_url, $target_slug, $post_status = 'publish') {
         if (!filter_var($source_url, FILTER_VALIDATE_URL)) {
             return 'URL de origem inválida.';
         }
         if (empty($target_slug)) {
             return 'Slug de destino não pode ser vazio.';
+        }
+        if (!in_array($post_status, ['publish','draft'])) {
+            $post_status = 'publish';
         }
         // Baixar HTML da página de origem
         $response = wp_remote_get($source_url, [
@@ -38,7 +42,7 @@ class SCM_Cloner {
             'post_title'   => ucfirst(str_replace('-', ' ', $target_slug)),
             'post_name'    => $target_slug,
             'post_content' => $html,
-            'post_status'  => 'publish',
+            'post_status'  => $post_status,
             'post_type'    => 'page',
         ];
         if ($existing) {
@@ -47,7 +51,7 @@ class SCM_Cloner {
         } else {
             wp_insert_post($page_data);
         }
-        return "Página clonada e publicada neste subdomínio.";
+        return $post_status === 'publish' ? "Página clonada e publicada neste subdomínio." : "Página clonada e salva como rascunho neste subdomínio.";
     }
 
     /**

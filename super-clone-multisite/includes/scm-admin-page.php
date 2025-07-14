@@ -20,7 +20,8 @@ function scm_admin_page_render() {
     if (isset($_POST['scm_clone_submit'])) {
         $source_url = esc_url_raw($_POST['scm_source_url']);
         $target_slug = sanitize_title($_POST['scm_target_slug']);
-        $msg = SCM_Cloner::clone_site($source_url, $target_slug);
+        $post_status = in_array($_POST['scm_post_status'], ['publish','draft']) ? $_POST['scm_post_status'] : 'publish';
+        $msg = SCM_Cloner::clone_site($source_url, $target_slug, $post_status);
     }
     ?>
     <div class="wrap">
@@ -35,6 +36,15 @@ function scm_admin_page_render() {
                 <tr>
                     <th scope="row"><label for="scm_target_slug">Slug do Novo Site/Página</label></th>
                     <td><input name="scm_target_slug" type="text" id="scm_target_slug" class="regular-text" required></td>
+                </tr>
+                <tr>
+                    <th scope="row"><label for="scm_post_status">Status da Página</label></th>
+                    <td>
+                        <select name="scm_post_status" id="scm_post_status">
+                            <option value="publish">Publicar imediatamente</option>
+                            <option value="draft">Salvar como rascunho</option>
+                        </select>
+                    </td>
                 </tr>
             </table>
             <p class="submit"><input type="submit" name="scm_clone_submit" id="scm_clone_submit" class="button button-primary" value="Clonar"></p>
