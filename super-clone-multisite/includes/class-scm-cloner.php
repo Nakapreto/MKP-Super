@@ -31,6 +31,7 @@ class SCM_Cloner {
             return 'Erro ao baixar o conteúdo da URL de origem.';
         }
         $html = $response['body'];
+        $html = self::clean_cloned_html($html, $source_url);
         // Cria/atualiza a página apenas no site atual
         $existing = get_page_by_path($target_slug, OBJECT, 'page');
         $page_data = [
@@ -47,5 +48,45 @@ class SCM_Cloner {
             wp_insert_post($page_data);
         }
         return "Página clonada e publicada neste subdomínio.";
+    }
+
+    /**
+     * Limpa e adapta o HTML clonado: remove rastreadores, reescreve links de recursos, etc.
+     */
+    private static function clean_cloned_html($html, $source_url) {
+        // Remove rastreadores conhecidos
+        $html = preg_replace('/<script[^>]*>.*?(googletagmanager|facebook\\.com.*pixel|tiktok\\.com.*sdk|gtag\\().*?<\\/script>/is', '', $html);
+        // Remove script litespeed_vary
+        $html = preg_replace('/<script[^>]*>var litespeed_vary[^<]*<\\/script>/i', '', $html);
+        // Reescreve links relativos de CSS/JS para absolutos
+        $html = preg_replace_callback('/(<link[^>]+href=["\\\'])([^"\\\']+)(["\\\'])/i', function($m) use ($source_url) {
+            $abs = self::make_absolute_url($m[2], $source_url);
+            return $m[1] . $abs . $m[3];
+        }, $html);
+        $html = preg_replace_callback('/(<script[^>]+src=["\\\'])([^"\\\']+)(["\\\'])/i', function($m) use ($source_url) {
+            $abs = self::make_absolute_url($m[2], $source_url);
+            return $m[1] . $abs . $m[3];
+        }, $html);
+        // Reescreve imagens
+        $html = preg_replace_callback('/(<img[^>]+src=["\\\'])([^"\\\']+)(["\\\'])/i', function($m) use ($source_url) {
+            $abs = self::make_absolute_url($m[2], $source_url);
+            return $m[1] . $abs . $m[3];
+        }, $html);
+        return $html;
+    }
+
+    /**
+     * Torna um link relativo em absoluto, baseado na URL de origem
+     */
+    private static function make_absolute_url($url, $base) {
+        if (preg_match('/^https?:\/\//i', $url)) return $url;
+        $parsed = parse_url($base);
+        $host = $parsed['scheme'] . '://' . $parsed['host'];
+        if (strpos($url, '/') === 0) {
+            return $host . $url;
+        } else {
+            $path = isset($parsed['path']) ? dirname($parsed['path']) : '';
+            return $host . $path . '/' . ltrim($url, '/');
+        }
     }
 }
