@@ -58,6 +58,11 @@ class SCM_Cloner {
         $html = preg_replace('/<script[^>]*>.*?(googletagmanager|facebook\\.com.*pixel|tiktok\\.com.*sdk|gtag\\().*?<\\/script>/is', '', $html);
         // Remove script litespeed_vary
         $html = preg_replace('/<script[^>]*>var litespeed_vary[^<]*<\\/script>/i', '', $html);
+        // Remove popups e scripts de RGPD conhecidos
+        $html = preg_replace('/<script[^>]*>.*?(cookie(consent|bot)|lgpd|rgpd|privacidade|privacy).*?<\\/script>/is', '', $html);
+        $html = preg_replace('/<div[^>]+(cookie(consent|bot)|lgpd|rgpd|privacidade|privacy)[^>]*>.*?<\\/div>/is', '', $html);
+        // Remove metatags indesejadas (generator, og:*, fb:*)
+        $html = preg_replace('/<meta[^>]+(generator|og:|fb:)[^>]*>/i', '', $html);
         // Reescreve links relativos de CSS/JS para absolutos
         $html = preg_replace_callback('/(<link[^>]+href=["\\\'])([^"\\\']+)(["\\\'])/i', function($m) use ($source_url) {
             $abs = self::make_absolute_url($m[2], $source_url);
@@ -72,6 +77,13 @@ class SCM_Cloner {
             $abs = self::make_absolute_url($m[2], $source_url);
             return $m[1] . $abs . $m[3];
         }, $html);
+        // Garante que o favicon seja absoluto
+        $html = preg_replace_callback('/(<link[^>]+rel=["\"](icon|shortcut icon)["\"][^>]+href=["\"])([^"\"]+)(["\"])/i', function($m) use ($source_url) {
+            $abs = self::make_absolute_url($m[3], $source_url);
+            return $m[1] . $abs . $m[4];
+        }, $html);
+        // Garante que o <title> e meta description sejam preservados
+        // (neste caso, apenas garantimos que não sejam removidos)
         return $html;
     }
 
