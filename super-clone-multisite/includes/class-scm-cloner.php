@@ -10,7 +10,7 @@ class SCM_Cloner {
     }
 
     /**
-     * Clona uma página para todos os sites da rede multisite
+     * Clona uma página apenas para o site/subdomínio atual
      * @param string $source_url URL da página a ser clonada
      * @param string $target_slug Slug da nova página
      * @return string Mensagem de sucesso ou erro
@@ -31,33 +31,21 @@ class SCM_Cloner {
             return 'Erro ao baixar o conteúdo da URL de origem.';
         }
         $html = $response['body'];
-        // Pega todos os sites da rede
-        if (!is_multisite()) {
-            return 'WordPress Multisite não está ativado.';
+        // Cria/atualiza a página apenas no site atual
+        $existing = get_page_by_path($target_slug, OBJECT, 'page');
+        $page_data = [
+            'post_title'   => ucfirst(str_replace('-', ' ', $target_slug)),
+            'post_name'    => $target_slug,
+            'post_content' => $html,
+            'post_status'  => 'publish',
+            'post_type'    => 'page',
+        ];
+        if ($existing) {
+            $page_data['ID'] = $existing->ID;
+            wp_update_post($page_data);
+        } else {
+            wp_insert_post($page_data);
         }
-        global $wpdb;
-        $sites = get_sites(['number' => 0]);
-        $success = 0;
-        foreach ($sites as $site) {
-            switch_to_blog($site->blog_id);
-            // Verifica se já existe uma página com o slug
-            $existing = get_page_by_path($target_slug, OBJECT, 'page');
-            $page_data = [
-                'post_title'   => ucfirst(str_replace('-', ' ', $target_slug)),
-                'post_name'    => $target_slug,
-                'post_content' => $html,
-                'post_status'  => 'publish',
-                'post_type'    => 'page',
-            ];
-            if ($existing) {
-                $page_data['ID'] = $existing->ID;
-                wp_update_post($page_data);
-            } else {
-                wp_insert_post($page_data);
-            }
-            restore_current_blog();
-            $success++;
-        }
-        return "Página clonada e publicada em {$success} site(s) da rede.";
+        return "Página clonada e publicada neste subdomínio.";
     }
 }
